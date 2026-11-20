@@ -4,25 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rendimiento Evolutivo · Seguimiento Diario de Entrenamientos</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Fuente Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     @keyframes slideUp {
       from { transform: translateY(16px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    .toast-enter {
-      animation: slideUp 0.25s ease-out forwards;
-    }
+    .toast-enter { animation: slideUp 0.25s ease-out forwards; }
   </style>
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-800 pb-16">
@@ -30,36 +23,33 @@
   <!-- Notificación flotante (Toast) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 hidden max-w-md toast-enter">
     <div id="toastBox" class="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium bg-slate-900 text-white border-slate-700">
-      <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
       <span id="toastMessage">Datos guardados correctamente</span>
     </div>
   </div>
 
   <!-- Modal de Confirmación para Borrar Todo -->
-  <div id="resetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
+  <div id="resetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
       <h3 class="text-lg font-bold text-slate-900">¿Borrar todos los registros guardados?</h3>
       <p class="text-sm text-slate-600">
-        Esta acción vaciará todos los datos almacenados en la memoria local del navegador. Podrás volver a recuperar los datos del repositorio pulsando en «Sincronizar datos.csv».
+        Esta acción vaciará los datos de la memoria local del navegador. Podrás recuperar los del repositorio pulsando «Sincronizar datos.csv».
       </p>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
-        <button id="confirmClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+        <button id="confirmClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold cursor-pointer">
           Sí, borrar todo
         </button>
-        <button id="cancelClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+        <button id="cancelClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold cursor-pointer">
           Cancelar
         </button>
       </div>
     </div>
   </div>
 
-  <!-- CABECERA SUPERIOR Y GESTIÓN DE CSV -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+  <!-- CABECERA SUPERIOR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
@@ -74,46 +64,36 @@
             </span>
           </div>
           <p id="sourceSubtitle" class="text-xs text-slate-500">
-            Sincronización automática con datos.csv · Guardado local y exportación CSV
+            Iniciando aplicación...
           </p>
         </div>
       </div>
 
-      <!-- Controles de Fichero CSV y Sincronización -->
       <div class="flex flex-wrap items-center gap-2">
-        <label class="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer select-none transition-colors">
-          <input id="autoDownloadCheck" type="checkbox" class="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" />
+        <label class="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer select-none">
+          <input id="autoDownloadCheck" type="checkbox" class="rounded text-blue-600 cursor-pointer" />
           <span>Auto-descargar CSV al guardar</span>
         </label>
 
         <input id="csvFileInput" type="file" accept=".csv,text/csv" class="hidden" />
 
-        <button id="syncRepoBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Volver a leer datos.csv desde el repositorio">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+        <button id="syncRepoBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold cursor-pointer">
           Sincronizar datos.csv
         </button>
 
-        <button id="uploadCsvBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
+        <button id="uploadCsvBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold cursor-pointer">
           Cargar CSV
         </button>
 
-        <button id="downloadCsvBtn" type="button" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span>Descargar CSV</span>
+        <button id="downloadCsvBtn" type="button" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer">
+          Descargar CSV
         </button>
 
-        <button id="loadDemoBtn" type="button" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Generar 30 días de entrenamiento de ejemplo">
+        <button id="loadDemoBtn" type="button" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold cursor-pointer">
           Ejemplo (30d)
         </button>
 
-        <button id="clearAllBtn" type="button" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Vaciar todos los datos">
+        <button id="clearAllBtn" type="button" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold cursor-pointer">
           Borrar todo
         </button>
       </div>
@@ -122,39 +102,25 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
 
-    <!-- BARRA DE FECHA ACTIVA Y SESIÓN DEL DÍA -->
-    <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200">
+    <!-- BARRA DE FECHA ACTIVA -->
+    <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
           <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button id="prevDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 transition-colors cursor-pointer" title="Día anterior">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div class="flex items-center gap-2 px-2">
-              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <input id="activeDateInput" type="date" class="bg-transparent font-bold text-sm text-slate-900 focus:outline-none cursor-pointer" />
-            </div>
-            <button id="nextDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 transition-colors cursor-pointer" title="Día siguiente">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            <button id="prevDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 cursor-pointer" title="Día anterior">◀</button>
+            <input id="activeDateInput" type="date" class="bg-transparent font-bold text-sm text-slate-900 px-2 focus:outline-none cursor-pointer" />
+            <button id="nextDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 cursor-pointer" title="Día siguiente">▶</button>
           </div>
 
-          <button id="goTodayBtn" type="button" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 transition-colors cursor-pointer">
+          <button id="goTodayBtn" type="button" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 cursor-pointer">
             Hoy
           </button>
 
           <div class="flex flex-wrap items-center gap-2">
-            <span id="preStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
+            <span id="preStatusBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
               Pre-Entreno: Pendiente
             </span>
-            <span id="postStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
+            <span id="postStatusBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
               Post-Entreno: Pendiente
             </span>
           </div>
@@ -164,178 +130,653 @@
           <label for="sessionNameInput" class="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0">
             SESIÓN DEL DÍA:
           </label>
-          <input
-            id="sessionNameInput"
-            type="text"
-            list="sessionPresets"
-            placeholder="Ej. Series 1000m, Rodaje suave Z2, Hyrox, Fuerza..."
-            class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <datalist id="sessionPresets">
-            <option value="Rodaje suave Z2"></option>
-            <option value="Series 1000m / Intervalos"></option>
-            <option value="Tempo / Umbral"></option>
-            <option value="Hyrox / WOD Funcional"></option>
-            <option value="Fuerza / Gimnasio"></option>
-            <option value="Tirada larga"></option>
-            <option value="Recuperación activa"></option>
-            <option value="Competición / Test"></option>
-            <option value="Descanso"></option>
-          </datalist>
+          <input id="sessionNameInput" type="text" placeholder="Ej. Series 1000m, Rodaje suave Z2, Hyrox..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-
       </div>
     </section>
 
-    <!-- SECCIÓN DE DOS FORMULARIOS -->
+    <!-- FORMULARIOS PRE Y POST -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-      <!-- FORMULARIO 1: ANTES DEL ENTRENAMIENTO -->
-      <form id="preWorkoutForm" class="bg-white rounded-2xl shadow-xs border-2 border-[#e6ccb2] overflow-hidden flex flex-col justify-between">
+      <form id="preWorkoutForm" class="bg-white rounded-2xl shadow-sm border-2 border-[#e6ccb2] overflow-hidden flex flex-col justify-between">
         <div>
           <div class="bg-[#f7d9c4] px-5 py-3.5 border-b border-[#e6ccb2] flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <svg class="w-5 h-5 text-amber-900" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
-                1. Antes del Entrenamiento (Pre-Sesión)
-              </h2>
-            </div>
-            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">
-              Escala 1 a 5
-            </span>
+            <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
+              1. Antes del Entrenamiento (Pre-Sesión)
+            </h2>
+            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">Escala 1 a 5</span>
           </div>
-
           <div id="preMetricsContainer" class="p-5 space-y-4"></div>
         </div>
-
         <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
-          <span class="text-xs text-slate-500">
-            Guarda las métricas matutinas sin borrar el post-entreno
-          </span>
-          <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer shrink-0">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+          <span class="text-xs text-slate-500">Guarda las métricas matutinas</span>
+          <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm cursor-pointer">
             Guardar Pre-Entreno
           </button>
         </div>
       </form>
 
-      <!-- FORMULARIO 2: DESPUÉS DEL ENTRENAMIENTO -->
-      <form id="postWorkoutForm" class="bg-white rounded-2xl shadow-xs border-2 border-[#e5d09c] overflow-hidden flex flex-col justify-between">
+      <form id="postWorkoutForm" class="bg-white rounded-2xl shadow-sm border-2 border-[#e5d09c] overflow-hidden flex flex-col justify-between">
         <div>
           <div class="bg-[#faecc8] px-5 py-3.5 border-b border-[#e5d09c] flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <svg class="w-5 h-5 text-amber-800" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-              </svg>
-              <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
-                2. Después del Entrenamiento (Post-Sesión)
-              </h2>
-            </div>
-            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">
-              RPE (1-10) y Sensaciones (1-5)
-            </span>
+            <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
+              2. Después del Entrenamiento (Post-Sesión)
+            </h2>
+            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">RPE y Sensaciones</span>
           </div>
-
           <div class="p-5 space-y-4">
             <div id="postRpeContainer" class="space-y-4"></div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <label class="text-sm font-bold text-slate-800">
-                    SENSACIONES (1 a 5)
-                  </label>
-                  <span id="sensacionesBadge" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
-                    4 / 5
-                  </span>
+                  <label class="text-sm font-bold text-slate-800">SENSACIONES (1 a 5)</label>
+                  <span id="sensacionesBadge" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">4 / 5</span>
                 </div>
                 <div id="sensacionesButtons" class="grid grid-cols-5 gap-1.5"></div>
-                <span class="text-[11px] text-slate-500 mt-1 block">
-                  1: Muy malas · 5: Fluidez y fuerza total
-                </span>
               </div>
-
               <div>
-                <label for="postNotesInput" class="text-sm font-bold text-slate-800 block mb-1.5">
-                  NOTAS DE LA SESIÓN
-                </label>
-                <textarea
-                  id="postNotesInput"
-                  rows="2"
-                  placeholder="Ritmos, pulsaciones, sensaciones musculares..."
-                  class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
-                ></textarea>
+                <label for="postNotesInput" class="text-sm font-bold text-slate-800 block mb-1.5">NOTAS DE LA SESIÓN</label>
+                <textarea id="postNotesInput" rows="2" placeholder="Ritmos, pulsaciones..." class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"></textarea>
               </div>
             </div>
           </div>
         </div>
-
         <div class="px-5 py-4 bg-amber-50/60 border-t border-[#e5d09c] flex items-center justify-between gap-4">
-          <span class="text-xs text-amber-950">
-            Guarda el post-entreno conservando los datos pre-entreno
-          </span>
-          <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+          <span class="text-xs text-amber-950">Conserva los datos pre-entreno</span>
+          <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm cursor-pointer">
             Guardar Post-Entreno
           </button>
         </div>
       </form>
-
     </section>
 
-    <!-- SECCIÓN A: 5 GRÁFICAS DE TENDENCIAS PRE-ENTRENO -->
+    <!-- SECCIÓN A: 5 GRÁFICAS PRE-ENTRENO -->
     <section class="space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-            </svg>
-            Sección A · Gráficos de Métricas Subjetivas Pre-Entreno
-          </h2>
-          <p class="text-xs text-slate-500">
-            Actualización en tiempo real: Valor diario, Media móvil 7 días, Media móvil 90 días y Diferencia 7–90 días
-          </p>
-        </div>
+      <div class="border-b border-slate-200 pb-3">
+        <h2 class="text-lg font-extrabold text-slate-900">Sección A · Gráficos de Métricas Subjetivas Pre-Entreno</h2>
+        <p class="text-xs text-slate-500">Valor diario, Media móvil 7 días, Media móvil 90 días y Diferencia 7–90 días</p>
+      </div>
 
-        <div class="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-700 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs">
-          <span class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6] inline-block"></span>
-            Valor diario
-          </span>
-          <span class="flex items-center gap-1.5">
-            <span class="w-4 h-0.5 bg-[#2563eb] inline-block"></span>
-            Media 7 días
-          </span>
-          <span class="flex items-center gap-1.5">
-            <span class="w-4 h-0 border-b-2 border-dashed border-[#d97706] inline-block"></span>
-            Media 90 días
-          </span>
-          <span class="flex items-center gap-1.5">
-            <span class="w-4 h-0.5 bg-[#991b1b] inline-block"></span>
-            Diferencia 7–90 días
-          </span>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="rounded-2xl border-2 border-slate-300 bg-[#ffffff] p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-slate-800 mb-3">Disposición para entrenar</h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 border border-slate-200 rounded-lg"><canvas id="chart_disposicion"></canvas></div>
+        </div>
+        <div class="rounded-2xl border-2 border-[#e2cfa0] bg-[#fdf2d0] p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-amber-950 mb-3">Ánimo</h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 border border-amber-200/80 rounded-lg"><canvas id="chart_animo"></canvas></div>
+        </div>
+        <div class="rounded-2xl border-2 border-[#deb2b0] bg-[#f9d5d3] p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-rose-950 mb-3">Energía</h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 border border-rose-200/80 rounded-lg"><canvas id="chart_energia"></canvas></div>
+        </div>
+        <div class="rounded-2xl border-2 border-[#cca098] bg-[#e6b9b1] p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-stone-900 mb-3">Dolor muscular</h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 border border-stone-300/80 rounded-lg"><canvas id="chart_dolor"></canvas></div>
+        </div>
+        <div class="rounded-2xl border-2 border-[#adc5de] bg-[#d4e4f4] p-4 sm:p-5 shadow-sm lg:col-span-2 lg:max-w-3xl lg:mx-auto lg:w-full">
+          <h3 class="text-base sm:text-lg font-bold text-center text-slate-900 mb-3">Estrés</h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 border border-blue-200/80 rounded-lg"><canvas id="chart_estres"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN B: 2 GRÁFICAS POST-ENTRENO -->
+    <section class="space-y-4 pt-2">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">Sección B · Análisis Post-Entrenamiento (RPE y Sensaciones)</h2>
+          <p class="text-xs text-slate-500">Carga interna vs. sensaciones percibidas</p>
+        </div>
+        <div id="postInsightBanner" class="px-3.5 py-2 rounded-xl border text-xs font-medium bg-blue-50 text-blue-800 border-blue-200">
+          Analizando sesiones...
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="rounded-2xl border-2 border-slate-300 bg-[#ffffff] p-4 sm:p-5 shadow-xs">
-          <h3 class="text-base sm:text-lg font-bold text-center text-slate-800 mb-3">
-            Disposición para entrenar
-          </h3>
-          <div class="h-64 sm:h-72 w-full bg-white p-2 sm:p-3 border border-slate-200 rounded-lg">
-            <canvas id="chart_disposicion"></canvas>
-          </div>
+        <div class="rounded-2xl border-2 border-[#e5d09c] bg-[#fdf6e4] p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-amber-950 mb-3">Carga Percibida (RPE) vs. Sensaciones</h3>
+          <div class="h-72 sm:h-80 w-full bg-white p-2 border border-amber-200 rounded-lg"><canvas id="chart_post_rpe_sens"></canvas></div>
         </div>
+        <div class="rounded-2xl border-2 border-indigo-200 bg-indigo-50/70 p-4 sm:p-5 shadow-sm">
+          <h3 class="text-base sm:text-lg font-bold text-center text-indigo-950 mb-3">Índice de Asimilación y Polarización</h3>
+          <div class="h-72 sm:h-80 w-full bg-white p-2 border border-indigo-200 rounded-lg"><canvas id="chart_post_assimilation"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        <div class="rounded-2xl border-2 border-[#e2cfa0] bg-[#fdf2d0] p-4 sm:p-5 shadow-xs">
-          <h3 class="text-base sm:text-lg font-bold text-center text-amber-950 mb-3">
-            Ánimo
-          </h3>
-          <div class="h-64 sm:h-7
+  <script>
+    const DEFAULT_CSV_FILE = 'datos.csv';
+    const STORAGE_KEY = 'rendimiento_evolutivo_standalone_v3';
+
+    const PRE_METRICS = [
+      { id: 'disposicion', label: 'Disposición para entrenar', hint: '1: Nula motivación · 5: Motivación máxima' },
+      { id: 'animo', label: 'Ánimo', hint: '1: Decaído / Irritable · 5: Excelente humor' },
+      { id: 'energia', label: 'Energía', hint: '1: Agotado · 5: Pletórico de vitalidad' },
+      { id: 'dolor', label: 'Dolor muscular', hint: '1: Dolor muy severo · 5: Sin agujetas / Fresco' },
+      { id: 'estres', label: 'Estrés', hint: '1: Estrés muy alto · 5: Relajado y tranquilo' }
+    ];
+
+    const POST_RPE_METRICS = [
+      { id: 'rpeSesion', label: 'RPE SESIÓN', subtitle: '(1 a 10)', activeClass: 'bg-amber-600 text-white border-amber-700', badgeClass: 'bg-amber-100 text-amber-900' },
+      { id: 'rpeIntervalos', label: 'RPE INTERVALOS', subtitle: '(1 a 10)', activeClass: 'bg-orange-600 text-white border-orange-700', badgeClass: 'bg-orange-100 text-orange-900' },
+      { id: 'rpeMaximo', label: 'RPE MÁXIMO', subtitle: '(1 a 10)', activeClass: 'bg-rose-600 text-white border-rose-700', badgeClass: 'bg-rose-100 text-rose-900' }
+    ];
+
+    function getLocalTodayStr() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    let selectedDate = getLocalTodayStr();
+    let records = [];
+    let preFormState = { disposicion: 4, animo: 4, energia: 4, dolor: 4, estres: 4 };
+    let postFormState = { rpeSesion: 7, rpeIntervalos: 8, rpeMaximo: 8, sensaciones: 4, notas: '' };
+    const chartInstances = {};
+
+    function generate30DaysSampleData() {
+      const baseToday = new Date();
+      const rows = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(baseToday);
+        d.setDate(d.getDate() - i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        rows.push({
+          date: dateStr, sesion: i % 2 === 0 ? 'Rodaje suave Z2' : 'Series / Fuerza',
+          disposicion: 4, animo: 4, energia: 4, dolor: 3, estres: 4,
+          rpeSesion: i % 2 === 0 ? 5 : 8, rpeIntervalos: i % 2 === 0 ? null : 8, rpeMaximo: i % 2 === 0 ? 6 : 9,
+          sensaciones: 4, notas: 'Datos de ejemplo'
+        });
+      }
+      return rows;
+    }
+
+    function renderPreFormButtons() {
+      const container = document.getElementById('preMetricsContainer');
+      container.innerHTML = '';
+      PRE_METRICS.forEach(metric => {
+        const row = document.createElement('div');
+        row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 last:border-none last:pb-0';
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = `<label class="text-sm font-bold text-slate-800 block">${metric.label}</label><span class="text-[11px] text-slate-500">${metric.hint}</span>`;
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'flex items-center gap-1.5 shrink-0';
+        [1, 2, 3, 4, 5].forEach(val => {
+          const isActive = Number(preFormState[metric.id]) === val;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = val;
+          btn.className = `w-10 h-9 rounded-lg font-bold text-sm border cursor-pointer ${isActive ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`;
+          btn.onclick = () => { preFormState[metric.id] = val; renderPreFormButtons(); };
+          btnGroup.appendChild(btn);
+        });
+        row.appendChild(infoDiv);
+        row.appendChild(btnGroup);
+        container.appendChild(row);
+      });
+    }
+
+    function renderPostFormButtons() {
+      const rpeContainer = document.getElementById('postRpeContainer');
+      rpeContainer.innerHTML = '';
+      POST_RPE_METRICS.forEach(metric => {
+        const block = document.createElement('div');
+        block.className = 'space-y-1.5 pb-3 border-b border-slate-100';
+        const currentVal = postFormState[metric.id];
+        block.innerHTML = `<div class="flex justify-between items-center"><label class="text-sm font-bold text-slate-800">${metric.label} <span class="text-xs font-normal text-slate-500">${metric.subtitle}</span></label><span class="text-xs font-extrabold px-2.5 py-0.5 rounded-md ${metric.badgeClass}">${currentVal} / 10</span></div>`;
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-10 gap-1';
+        for (let num = 1; num <= 10; num++) {
+          const isActive = Number(currentVal) === num;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = num;
+          btn.className = `h-8 rounded-md font-bold text-xs border cursor-pointer ${isActive ? metric.activeClass : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-amber-50'}`;
+          btn.onclick = () => { postFormState[metric.id] = num; renderPostFormButtons(); };
+          grid.appendChild(btn);
+        }
+        block.appendChild(grid);
+        rpeContainer.appendChild(block);
+      });
+
+      document.getElementById('sensacionesBadge').textContent = `${postFormState.sensaciones} / 5`;
+      const sensContainer = document.getElementById('sensacionesButtons');
+      sensContainer.innerHTML = '';
+      for (let val = 1; val <= 5; val++) {
+        const isActive = Number(postFormState.sensaciones) === val;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = val;
+        btn.className = `h-9 rounded-lg font-bold text-sm border cursor-pointer ${isActive ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-emerald-50'}`;
+        btn.onclick = () => { postFormState.sensaciones = val; renderPostFormButtons(); };
+        sensContainer.appendChild(btn);
+      }
+    }
+
+    function saveToLocalStorage() {
+      records.sort((a, b) => a.date.localeCompare(b.date));
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch (e) {}
+      document.getElementById('daysCounterBadge').textContent = `${records.length} días en CSV`;
+    }
+
+    function formatShortDate(isoDate) {
+      if (!isoDate) return '';
+      const p = isoDate.split('-');
+      return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : isoDate;
+    }
+
+    function syncFormsWithSelectedDate() {
+      document.getElementById('activeDateInput').value = selectedDate;
+      const existing = records.find(r => r.date === selectedDate);
+      const preBadge = document.getElementById('preStatusBadge');
+      const postBadge = document.getElementById('postStatusBadge');
+
+      if (existing) {
+        document.getElementById('sessionNameInput').value = existing.sesion || '';
+        preFormState = {
+          disposicion: existing.disposicion ?? 4,
+          animo: existing.animo ?? 4,
+          energia: existing.energia ?? 4,
+          dolor: existing.dolor ?? 4,
+          estres: existing.estres ?? 4
+        };
+        postFormState = {
+          rpeSesion: existing.rpeSesion ?? 7,
+          rpeIntervalos: existing.rpeIntervalos ?? 8,
+          rpeMaximo: existing.rpeMaximo ?? 8,
+          sensaciones: existing.sensaciones ?? 4,
+          notas: existing.notas ?? ''
+        };
+        document.getElementById('postNotesInput').value = postFormState.notas;
+        const hasPre = existing.disposicion !== null && existing.disposicion !== undefined;
+        const hasPost = existing.rpeSesion !== null && existing.rpeSesion !== undefined;
+        preBadge.textContent = `Pre-Entreno (${formatShortDate(selectedDate)}): ${hasPre ? 'Guardado ✓' : 'Pendiente'}`;
+        postBadge.textContent = `Post-Entreno (${formatShortDate(selectedDate)}): ${hasPost ? 'Guardado ✓' : 'Pendiente'}`;
+      } else {
+        document.getElementById('sessionNameInput').value = '';
+        preFormState = { disposicion: 4, animo: 4, energia: 4, dolor: 4, estres: 4 };
+        postFormState = { rpeSesion: 7, rpeIntervalos: 7, rpeMaximo: 8, sensaciones: 4, notas: '' };
+        document.getElementById('postNotesInput').value = '';
+        preBadge.textContent = `Pre-Entreno (${formatShortDate(selectedDate)}): Pendiente`;
+        postBadge.textContent = `Post-Entreno (${formatShortDate(selectedDate)}): Pendiente`;
+      }
+      renderPreFormButtons();
+      renderPostFormButtons();
+    }
+
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toastContainer');
+      const box = document.getElementById('toastBox');
+      document.getElementById('toastMessage').textContent = message;
+      box.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium ${isError ? 'bg-rose-600 text-white border-rose-700' : 'bg-slate-900 text-white border-slate-700'}`;
+      container.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => container.classList.add('hidden'), 3800);
+    }
+
+    function downloadCSVFile() {
+      if (records.length === 0) { showToast('No hay registros para exportar.', true); return; }
+      const headers = ['FECHA','SESION','DISPOSICION','ANIMO','ENERGIA','DOLOR_MUSCULAR','ESTRES','RPE_SESION','RPE_INTERVALOS','RPE_MAXIMO','SENSACIONES','NOTAS'];
+      const esc = (v) => {
+        if (v === null || v === undefined) return '';
+        const s = String(v);
+        return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const rows = [...records].sort((a, b) => a.date.localeCompare(b.date)).map(r => [
+        r.date, esc(r.sesion), r.disposicion ?? '', r.animo ?? '', r.energia ?? '', r.dolor ?? '', r.estres ?? '',
+        r.rpeSesion ?? '', r.rpeIntervalos ?? '', r.rpeMaximo ?? '', r.sensaciones ?? '', esc(r.notas)
+      ].join(','));
+      const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = DEFAULT_CSV_FILE;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function parseUploadedCSV(text, sourceLabel = 'CSV cargado') {
+      try {
+        const cleanText = text.replace(/^\uFEFF/, '').trim();
+        if (!cleanText) return false;
+        const firstLine = cleanText.split(/\r?\n/)[0] || '';
+        const commaCount = (firstLine.match(/,/g) || []).length;
+        const semiCount = (firstLine.match(/;/g) || []).length;
+        const delimiter = semiCount > commaCount ? ';' : ',';
+
+        const rows = [];
+        let currentRow = [];
+        let currentVal = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < cleanText.length; i++) {
+          const ch = cleanText[i];
+          const nextCh = cleanText[i + 1];
+          if (ch === '"') {
+            if (inQuotes && nextCh === '"') { currentVal += '"'; i++; }
+            else { inQuotes = !inQuotes; }
+          } else if (ch === delimiter && !inQuotes) {
+            currentRow.push(currentVal.trim());
+            currentVal = '';
+          } else if ((ch === '\n' || (ch === '\r' && nextCh === '\n')) && !inQuotes) {
+            if (ch === '\r') i++;
+            currentRow.push(currentVal.trim());
+            if (currentRow.some(c => c !== '')) rows.push(currentRow);
+            currentRow = [];
+            currentVal = '';
+          } else {
+            currentVal += ch;
+          }
+        }
+        if (currentVal !== '' || currentRow.length > 0) {
+          currentRow.push(currentVal.trim());
+          if (currentRow.some(c => c !== '')) rows.push(currentRow);
+        }
+
+        if (rows.length < 2) {
+          showToast('El CSV no tiene suficientes filas.', true);
+          return false;
+        }
+
+        const numOrNull = (val) => {
+          if (val === undefined || val === null || val === '') return null;
+          const p = Number(String(val).replace(',', '.'));
+          return Number.isNaN(p) ? null : p;
+        };
+
+        const imported = [];
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (!cols[0]) continue;
+          let dateStr = cols[0].trim();
+          if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(dateStr)) {
+            const [dd, mm, yyyy] = dateStr.split('/');
+            dateStr = `${yyyy.length === 2 ? '20' + yyyy : yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+          }
+          if (!/^\d{4}-\d{2}-\d{2}/.test(dateStr)) continue;
+          imported.push({
+            date: dateStr.slice(0, 10),
+            sesion: cols[1] || 'Entrenamiento',
+            disposicion: numOrNull(cols[2]),
+            animo: numOrNull(cols[3]),
+            energia: numOrNull(cols[4]),
+            dolor: numOrNull(cols[5]),
+            estres: numOrNull(cols[6]),
+            rpeSesion: numOrNull(cols[7]),
+            rpeIntervalos: numOrNull(cols[8]),
+            rpeMaximo: numOrNull(cols[9]),
+            sensaciones: numOrNull(cols[10]),
+            notas: cols[11] || ''
+          });
+        }
+
+        if (imported.length === 0) {
+          showToast('No se encontraron fechas válidas (AAAA-MM-DD) en el CSV.', true);
+          return false;
+        }
+
+        records = imported.sort((a, b) => a.date.localeCompare(b.date));
+        selectedDate = records[records.length - 1].date;
+        saveToLocalStorage();
+        syncFormsWithSelectedDate();
+        updateAllCharts();
+        document.getElementById('sourceSubtitle').textContent = `Fuente activa: ${sourceLabel} (${records.length} sesiones)`;
+        return true;
+      } catch (err) {
+        console.error(err);
+        showToast('Error al leer el formato del CSV.', true);
+        return false;
+      }
+    }
+
+    async function fetchRepoCSV(notifyUser = false) {
+      try {
+        const res = await fetch(`${DEFAULT_CSV_FILE}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          throw new Error('Respuesta HTML en lugar de CSV');
+        }
+        const ok = parseUploadedCSV(text, DEFAULT_CSV_FILE);
+        if (ok && notifyUser) showToast(`Sincronizado con ${DEFAULT_CSV_FILE} (${records.length} sesiones).`);
+        return ok;
+      } catch (err) {
+        if (notifyUser) showToast(`No se encontró "${DEFAULT_CSV_FILE}" junto al HTML. Usa "Cargar CSV".`, true);
+        return false;
+      }
+    }
+
+    function computeEnrichedSeries() {
+      const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
+      return sorted.map(entry => {
+        const entryDate = new Date(entry.date);
+        const getRollingAvg = (key, daysWindow) => {
+          const cutoff = new Date(entryDate);
+          cutoff.setDate(cutoff.getDate() - daysWindow);
+          const valid = sorted.filter(item => {
+            const d = new Date(item.date);
+            return d <= entryDate && d > cutoff && item[key] !== null && item[key] !== undefined;
+          });
+          if (valid.length === 0) return null;
+          return Number((valid.reduce((acc, cur) => acc + Number(cur[key]), 0) / valid.length).toFixed(2));
+        };
+        const row = { ...entry, shortDate: formatShortDate(entry.date) };
+        PRE_METRICS.forEach(m => {
+          const avg7 = getRollingAvg(m.id, 7);
+          const avg90 = getRollingAvg(m.id, 90);
+          row[`${m.id}_7`] = avg7;
+          row[`${m.id}_90`] = avg90;
+          row[`${m.id}_diff`] = (avg7 !== null && avg90 !== null) ? Number((avg7 - avg90).toFixed(2)) : null;
+        });
+        row.rpeSesion_7 = getRollingAvg('rpeSesion', 7);
+        row.polarizacionPico = (entry.rpeMaximo !== null && entry.rpeSesion !== null) ? Number((entry.rpeMaximo - entry.rpeSesion).toFixed(2)) : null;
+        row.ratioSensRpe = (entry.sensaciones !== null && entry.rpeSesion !== null && entry.rpeSesion > 0) ? Number(((entry.sensaciones / entry.rpeSesion) * 10).toFixed(2)) : null;
+        return row;
+      });
+    }
+
+    function updateAllCharts() {
+      if (typeof Chart === 'undefined') return;
+      const enriched = computeEnrichedSeries();
+      const labels = enriched.map(r => r.shortDate);
+
+      PRE_METRICS.forEach(metric => {
+        const canvasId = `chart_${metric.id}`;
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+        chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Valor diario', data: enriched.map(r => r[metric.id]), borderColor: '#64748b', backgroundColor: '#3b82f6', borderWidth: 1.2, pointRadius: 3.5, tension: 0.2, spanGaps: true },
+              { label: 'Media 7 días', data: enriched.map(r => r[`${metric.id}_7`]), borderColor: '#2563eb', borderWidth: 2.3, pointRadius: 0, tension: 0.25, spanGaps: true },
+              { label: 'Media 90 días', data: enriched.map(r => r[`${metric.id}_90`]), borderColor: '#d97706', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, tension: 0.25, spanGaps: true },
+              { label: 'Diferencia 7–90 días', data: enriched.map(r => r[`${metric.id}_diff`]), borderColor: '#991b1b', borderWidth: 1.8, pointRadius: 0, tension: 0.25, spanGaps: true }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 16, font: { size: 11 } } } },
+            scales: { y: { min: -2, max: 5.5, ticks: { stepSize: 1 } }, x: { ticks: { font: { size: 10 } }, grid: { display: false } } }
+          }
+        });
+      });
+
+      const postDays = enriched.filter(r => r.rpeSesion !== null || r.rpeIntervalos !== null || r.rpeMaximo !== null || r.sensaciones !== null);
+      const postLabels = postDays.map(r => r.shortDate);
+
+      const banner = document.getElementById('postInsightBanner');
+      if (postDays.length > 0) {
+        const last = postDays[postDays.length - 1];
+        banner.textContent = `Última sesión (${last.shortDate}): RPE Sesión ${last.rpeSesion ?? '-'} | Sensaciones ${last.sensaciones ?? '-'}/5.`;
+      }
+
+      const c1 = document.getElementById('chart_post_rpe_sens');
+      if (c1) {
+        if (chartInstances['chart_post_rpe_sens']) chartInstances['chart_post_rpe_sens'].destroy();
+        chartInstances['chart_post_rpe_sens'] = new Chart(c1.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: postLabels,
+            datasets: [
+              { type: 'bar', label: 'RPE Sesión', data: postDays.map(r => r.rpeSesion), backgroundColor: 'rgba(245, 158, 11, 0.45)', borderColor: '#d97706', borderWidth: 1, yAxisID: 'yRpe' },
+              { type: 'line', label: 'RPE Intervalos', data: postDays.map(r => r.rpeIntervalos), borderColor: '#ea580c', borderWidth: 2, pointRadius: 3, spanGaps: true, yAxisID: 'yRpe' },
+              { type: 'line', label: 'RPE Máximo', data: postDays.map(r => r.rpeMaximo), borderColor: '#dc2626', borderWidth: 2, pointRadius: 3, spanGaps: true, yAxisID: 'yRpe' },
+              { type: 'line', label: 'Sensaciones (1-5)', data: postDays.map(r => r.sensaciones), borderColor: '#059669', borderWidth: 3, pointRadius: 4, spanGaps: true, yAxisID: 'ySens' }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } },
+            scales: {
+              yRpe: { type: 'linear', position: 'left', min: 0, max: 10.5 },
+              ySens: { type: 'linear', position: 'right', min: 0, max: 5.5, grid: { drawOnChartArea: false } },
+              x: { ticks: { font: { size: 10 } } }
+            }
+          }
+        });
+      }
+
+      const c2 = document.getElementById('chart_post_assimilation');
+      if (c2) {
+        if (chartInstances['chart_post_assimilation']) chartInstances['chart_post_assimilation'].destroy();
+        chartInstances['chart_post_assimilation'] = new Chart(c2.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: postLabels,
+            datasets: [
+              { type: 'bar', label: 'Pico (RPE Máx − Sesión)', data: postDays.map(r => r.polarizacionPico), backgroundColor: 'rgba(244, 63, 94, 0.55)', borderColor: '#e11d48', borderWidth: 1 },
+              { type: 'line', label: 'Media 7d RPE Sesión', data: postDays.map(r => r.rpeSesion_7), borderColor: '#2563eb', borderWidth: 2.3, borderDash: [5, 3], pointRadius: 0, spanGaps: true },
+              { type: 'line', label: 'Ratio Sens/RPE (×10)', data: postDays.map(r => r.ratioSensRpe), borderColor: '#4f46e5', backgroundColor: 'rgba(99, 102, 241, 0.16)', fill: true, borderWidth: 2.5, pointRadius: 3.5, spanGaps: true }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } },
+            scales: { y: { min: 0, max: 10.5 }, x: { ticks: { font: { size: 10 } } } }
+          }
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Enlazar todos los eventos PRIMERO para que los botones funcionen siempre
+      document.getElementById('syncRepoBtn').onclick = () => fetchRepoCSV(true);
+      document.getElementById('downloadCsvBtn').onclick = downloadCSVFile;
+      document.getElementById('uploadCsvBtn').onclick = () => document.getElementById('csvFileInput').click();
+      document.getElementById('csvFileInput').onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (parseUploadedCSV(ev.target.result, file.name)) {
+            showToast(`CSV "${file.name}" cargado (${records.length} días).`);
+          }
+        };
+        reader.readAsText(file, 'UTF-8');
+        e.target.value = '';
+      };
+
+      document.getElementById('activeDateInput').onchange = (e) => {
+        if (e.target.value) { selectedDate = e.target.value; syncFormsWithSelectedDate(); }
+      };
+      document.getElementById('prevDayBtn').onclick = () => {
+        const d = new Date(selectedDate); d.setDate(d.getDate() - 1);
+        selectedDate = d.toISOString().split('T')[0]; syncFormsWithSelectedDate();
+      };
+      document.getElementById('nextDayBtn').onclick = () => {
+        const d = new Date(selectedDate); d.setDate(d.getDate() + 1);
+        selectedDate = d.toISOString().split('T')[0]; syncFormsWithSelectedDate();
+      };
+      document.getElementById('goTodayBtn').onclick = () => {
+        selectedDate = getLocalTodayStr(); syncFormsWithSelectedDate();
+      };
+
+      document.getElementById('preWorkoutForm').onsubmit = (e) => {
+        e.preventDefault();
+        const existing = records.find(r => r.date === selectedDate) || {};
+        const updated = {
+          date: selectedDate,
+          sesion: document.getElementById('sessionNameInput').value.trim() || 'Entrenamiento',
+          disposicion: Number(preFormState.disposicion), animo: Number(preFormState.animo),
+          energia: Number(preFormState.energia), dolor: Number(preFormState.dolor), estres: Number(preFormState.estres),
+          rpeSesion: existing.rpeSesion ?? null, rpeIntervalos: existing.rpeIntervalos ?? null,
+          rpeMaximo: existing.rpeMaximo ?? null, sensaciones: existing.sensaciones ?? null, notas: existing.notas ?? ''
+        };
+        records = [...records.filter(r => r.date !== selectedDate), updated];
+        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
+        showToast(`Pre-Entreno del ${formatShortDate(selectedDate)} guardado.`);
+      };
+
+      document.getElementById('postWorkoutForm').onsubmit = (e) => {
+        e.preventDefault();
+        const existing = records.find(r => r.date === selectedDate) || {};
+        const updated = {
+          date: selectedDate,
+          sesion: document.getElementById('sessionNameInput').value.trim() || existing.sesion || 'Entrenamiento',
+          disposicion: existing.disposicion ?? Number(preFormState.disposicion),
+          animo: existing.animo ?? Number(preFormState.animo),
+          energia: existing.energia ?? Number(preFormState.energia),
+          dolor: existing.dolor ?? Number(preFormState.dolor),
+          estres: existing.estres ?? Number(preFormState.estres),
+          rpeSesion: Number(postFormState.rpeSesion), rpeIntervalos: Number(postFormState.rpeIntervalos),
+          rpeMaximo: Number(postFormState.rpeMaximo), sensaciones: Number(postFormState.sensaciones),
+          notas: document.getElementById('postNotesInput').value.trim()
+        };
+        records = [...records.filter(r => r.date !== selectedDate), updated];
+        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
+        showToast(`Post-Entreno del ${formatShortDate(selectedDate)} guardado.`);
+      };
+
+      document.getElementById('loadDemoBtn').onclick = () => {
+        records = generate30DaysSampleData(); selectedDate = getLocalTodayStr();
+        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        document.getElementById('sourceSubtitle').textContent = 'Fuente activa: Datos de ejemplo (30 días)';
+        showToast('Cargados 30 días de ejemplo.');
+      };
+
+      const resetModal = document.getElementById('resetModal');
+      document.getElementById('clearAllBtn').onclick = () => { resetModal.classList.remove('hidden'); resetModal.classList.add('flex'); };
+      document.getElementById('cancelClearBtn').onclick = () => { resetModal.classList.add('hidden'); resetModal.classList.remove('flex'); };
+      document.getElementById('confirmClearBtn').onclick = () => {
+        records = []; saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        resetModal.classList.add('hidden'); resetModal.classList.remove('flex');
+        document.getElementById('sourceSubtitle').textContent = 'Sin datos cargados';
+        showToast('Datos borrados.');
+      };
+
+      // 2. Renderizar controles iniciales de inmediato
+      syncFormsWithSelectedDate();
+
+      // 3. Intentar cargar datos.csv del repositorio; si no existe, usar localStorage o ejemplo
+      const loadedFromRepo = await fetchRepoCSV(false);
+      if (!loadedFromRepo) {
+        let loadedLocal = false;
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          if (Array.isArray(saved) && saved.length > 0) {
+            records = saved;
+            selectedDate = records[records.length - 1].date;
+            document.getElementById('sourceSubtitle').textContent = `Fuente activa: Memoria local (${records.length} sesiones)`;
+            loadedLocal = true;
+          }
+        } catch (e) {}
+
+        if (!loadedLocal) {
+          records = generate30DaysSampleData();
+          document.getElementById('sourceSubtitle').textContent = 'Sin datos.csv en carpeta · Mostrando ejemplo (pulsa "Cargar CSV")';
+        }
+        saveToLocalStorage();
+        syncFormsWithSelectedDate();
+        updateAllCharts();
+      }
+    });
+  </script>
+</body>
+</html>
