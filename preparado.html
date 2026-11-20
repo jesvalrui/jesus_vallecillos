@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendimiento Evolutivo · Seguimiento Diario de Entrenamientos</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Fuente Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast-enter {
+      animation: slideUp 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800 pb-16">
+
+  <!-- Notificación flotante (Toast) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 hidden max-w-md toast-enter">
+    <div id="toastBox" class="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium bg-slate-900 text-white border-slate-700">
+      <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span id="toastMessage">Datos guardados correctamente</span>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Borrar Todo -->
+  <div id="resetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">¿Borrar todos los registros guardados?</h3>
+      <p class="text-sm text-slate-600">
+        Esta acción vaciará todos los datos almacenados en la memoria local del navegador. Podrás volver a recuperar los datos del repositorio pulsando en «Sincronizar datos.csv».
+      </p>
+      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+        <button id="confirmClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+          Sí, borrar todo
+        </button>
+        <button id="cancelClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CABECERA SUPERIOR Y GESTIÓN DE CSV -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              Rendimiento Evolutivo · Seguimiento Diario
+            </h1>
+            <span id="daysCounterBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+              0 días en CSV
+            </span>
+          </div>
+          <p id="sourceSubtitle" class="text-xs text-slate-500">
+            Sincronización automática con datos.csv · Guardado local y exportación CSV
+          </p>
+        </div>
+      </div>
+
+      <!-- Controles de Fichero CSV y Sincronización -->
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer select-none transition-colors">
+          <input id="autoDownloadCheck" type="checkbox" class="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" />
+          <span>Auto-descargar CSV al guardar</span>
+        </label>
+
+        <input id="csvFileInput" type="file" accept=".csv,text/csv" class="hidden" />
+
+        <button id="syncRepoBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Volver a leer datos.csv desde el repositorio">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Sincronizar datos.csv
+        </button>
+
+        <button id="uploadCsvBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Cargar CSV
+        </button>
+
+        <button id="downloadCsvBtn" type="button" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Descargar CSV</span>
+        </button>
+
+        <button id="loadDemoBtn" type="button" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Generar 30 días de entrenamiento de ejemplo">
+          Ejemplo (30d)
+        </button>
+
+        <button id="clearAllBtn" type="button" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer" title="Vaciar todos los datos">
+          Borrar todo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
+
+    <!-- BARRA DE FECHA ACTIVA Y SESIÓN DEL DÍA -->
+    <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button id="prevDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 transition-colors cursor-pointer" title="Día anterior">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div class="flex items-center gap-2 px-2">
+              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <input id="activeDateInput" type="date" class="bg-transparent font-bold text-sm text-slate-900 focus:outline-none cursor-pointer" />
+            </div>
+            <button id="nextDayBtn" type="button" class="p-2 hover:bg-white rounded-lg text-slate-700 transition-colors cursor-pointer" title="Día siguiente">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <button id="goTodayBtn" type="button" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 transition-colors cursor-pointer">
+            Hoy
+          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="preStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
+              Pre-Entreno: Pendiente
+            </span>
+            <span id="postStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
+              Post-Entreno: Pendiente
+            </span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 max-w-xl">
+          <label for="sessionNameInput" class="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0">
+            SESIÓN DEL DÍA:
+          </label>
+          <input
+            id="sessionNameInput"
+            type="text"
+            list="sessionPresets"
+            placeholder="Ej. Series 1000m, Rodaje suave Z2, Hyrox, Fuerza..."
+            class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <datalist id="sessionPresets">
+            <option value="Rodaje suave Z2"></option>
+            <option value="Series 1000m / Intervalos"></option>
+            <option value="Tempo / Umbral"></option>
+            <option value="Hyrox / WOD Funcional"></option>
+            <option value="Fuerza / Gimnasio"></option>
+            <option value="Tirada larga"></option>
+            <option value="Recuperación activa"></option>
+            <option value="Competición / Test"></option>
+            <option value="Descanso"></option>
+          </datalist>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE DOS FORMULARIOS -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- FORMULARIO 1: ANTES DEL ENTRENAMIENTO -->
+      <form id="preWorkoutForm" class="bg-white rounded-2xl shadow-xs border-2 border-[#e6ccb2] overflow-hidden flex flex-col justify-between">
+        <div>
+          <div class="bg-[#f7d9c4] px-5 py-3.5 border-b border-[#e6ccb2] flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-5 h-5 text-amber-900" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
+                1. Antes del Entrenamiento (Pre-Sesión)
+              </h2>
+            </div>
+            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">
+              Escala 1 a 5
+            </span>
+          </div>
+
+          <div id="preMetricsContainer" class="p-5 space-y-4"></div>
+        </div>
+
+        <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
+          <span class="text-xs text-slate-500">
+            Guarda las métricas matutinas sin borrar el post-entreno
+          </span>
+          <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer shrink-0">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Guardar Pre-Entreno
+          </button>
+        </div>
+      </form>
+
+      <!-- FORMULARIO 2: DESPUÉS DEL ENTRENAMIENTO -->
+      <form id="postWorkoutForm" class="bg-white rounded-2xl shadow-xs border-2 border-[#e5d09c] overflow-hidden flex flex-col justify-between">
+        <div>
+          <div class="bg-[#faecc8] px-5 py-3.5 border-b border-[#e5d09c] flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-5 h-5 text-amber-800" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+              </svg>
+              <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-slate-900">
+                2. Después del Entrenamiento (Post-Sesión)
+              </h2>
+            </div>
+            <span class="text-xs font-semibold text-amber-950 bg-white/75 px-2.5 py-0.5 rounded-md">
+              RPE (1-10) y Sensaciones (1-5)
+            </span>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <div id="postRpeContainer" class="space-y-4"></div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="text-sm font-bold text-slate-800">
+                    SENSACIONES (1 a 5)
+                  </label>
+                  <span id="sensacionesBadge" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                    4 / 5
+                  </span>
+                </div>
+                <div id="sensacionesButtons" class="grid grid-cols-5 gap-1.5"></div>
+                <span class="text-[11px] text-slate-500 mt-1 block">
+                  1: Muy malas · 5: Fluidez y fuerza total
+                </span>
+              </div>
+
+              <div>
+                <label for="postNotesInput" class="text-sm font-bold text-slate-800 block mb-1.5">
+                  NOTAS DE LA SESIÓN
+                </label>
+                <textarea
+                  id="postNotesInput"
+                  rows="2"
+                  placeholder="Ritmos, pulsaciones, sensaciones musculares..."
+                  class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-5 py-4 bg-amber-50/60 border-t border-[#e5d09c] flex items-center justify-between gap-4">
+          <span class="text-xs text-amber-950">
+            Guarda el post-entreno conservando los datos pre-entreno
+          </span>
+          <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Guardar Post-Entreno
+          </button>
+        </div>
+      </form>
+
+    </section>
+
+    <!-- SECCIÓN A: 5 GRÁFICAS DE TENDENCIAS PRE-ENTRENO -->
+    <section class="space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            </svg>
+            Sección A · Gráficos de Métricas Subjetivas Pre-Entreno
+          </h2>
+          <p class="text-xs text-slate-500">
+            Actualización en tiempo real: Valor diario, Media móvil 7 días, Media móvil 90 días y Diferencia 7–90 días
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-700 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6] inline-block"></span>
+            Valor diario
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-4 h-0.5 bg-[#2563eb] inline-block"></span>
+            Media 7 días
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-4 h-0 border-b-2 border-dashed border-[#d97706] inline-block"></span>
+            Media 90 días
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-4 h-0.5 bg-[#991b1b] inline-block"></span>
+            Diferencia 7–90 días
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="rounded-2xl border-2 border-slate-300 bg-[#ffffff] p-4 sm:p-5 shadow-xs">
+          <h3 class="text-base sm:text-lg font-bold text-center text-slate-800 mb-3">
+            Disposición para entrenar
+          </h3>
+          <div class="h-64 sm:h-72 w-full bg-white p-2 sm:p-3 border border-slate-200 rounded-lg">
+            <canvas id="chart_disposicion"></canvas>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border-2 border-[#e2cfa0] bg-[#fdf2d0] p-4 sm:p-5 shadow-xs">
+          <h3 class="text-base sm:text-lg font-bold text-center text-amber-950 mb-3">
+            Ánimo
+          </h3>
+          <div class="h-64 sm:h-7
