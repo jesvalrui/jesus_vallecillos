@@ -161,7 +161,7 @@
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <label class="text-sm font-bold text-slate-800">SENSACIONES (1 a 5)</label>
-                  <span id="sensacionesBadge" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">4 / 5</span>
+                  <span id="sensacionesBadge" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">1 / 5</span>
                 </div>
                 <div id="sensacionesButtons" class="grid grid-cols-5 gap-1.5"></div>
               </div>
@@ -270,8 +270,8 @@
 
     let selectedDate = getLocalTodayStr();
     let records = [];
-    let preFormState = { disposicion: 4, animo: 4, energia: 4, dolor: 4, estres: 4 };
-    let postFormState = { rpeSesion: 7, rpeIntervalos: 8, rpeMaximo: 8, sensaciones: 4, notas: '' };
+    let preFormState = { disposicion: 1, animo: 1, energia: 1, dolor: 1, estres: 1 };
+    let postFormState = { rpeSesion: 1, rpeIntervalos: 1, rpeMaximo: 1, sensaciones: 1, notas: '' };
     const chartInstances = {};
 
     function renderPreFormButtons() {
@@ -357,17 +357,17 @@
       if (existing) {
         document.getElementById('sessionNameInput').value = existing.sesion || '';
         preFormState = {
-          disposicion: existing.disposicion ?? 4,
-          animo: existing.animo ?? 4,
-          energia: existing.energia ?? 4,
-          dolor: existing.dolor ?? 4,
-          estres: existing.estres ?? 4
+          disposicion: existing.disposicion ?? 1,
+          animo: existing.animo ?? 1,
+          energia: existing.energia ?? 1,
+          dolor: existing.dolor ?? 1,
+          estres: existing.estres ?? 1
         };
         postFormState = {
-          rpeSesion: existing.rpeSesion ?? 7,
-          rpeIntervalos: existing.rpeIntervalos ?? 8,
-          rpeMaximo: existing.rpeMaximo ?? 8,
-          sensaciones: existing.sensaciones ?? 4,
+          rpeSesion: existing.rpeSesion ?? 1,
+          rpeIntervalos: existing.rpeIntervalos ?? 1,
+          rpeMaximo: existing.rpeMaximo ?? 1,
+          sensaciones: existing.sensaciones ?? 1,
           notas: existing.notas ?? ''
         };
         document.getElementById('postNotesInput').value = postFormState.notas;
@@ -377,8 +377,8 @@
         postBadge.textContent = `Post-Entreno (${formatShortDate(selectedDate)}): ${hasPost ? 'Guardado ✓' : 'Pendiente'}`;
       } else {
         document.getElementById('sessionNameInput').value = '';
-        preFormState = { disposicion: 4, animo: 4, energia: 4, dolor: 4, estres: 4 };
-        postFormState = { rpeSesion: 7, rpeIntervalos: 7, rpeMaximo: 8, sensaciones: 4, notas: '' };
+        preFormState = { disposicion: 1, animo: 1, energia: 1, dolor: 1, estres: 1 };
+        postFormState = { rpeSesion: 1, rpeIntervalos: 1, rpeMaximo: 1, sensaciones: 1, notas: '' };
         document.getElementById('postNotesInput').value = '';
         preBadge.textContent = `Pre-Entreno (${formatShortDate(selectedDate)}): Pendiente`;
         postBadge.textContent = `Post-Entreno (${formatShortDate(selectedDate)}): Pendiente`;
