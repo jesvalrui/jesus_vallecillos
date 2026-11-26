@@ -664,8 +664,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Enlazar todos los eventos PRIMERO para que los botones funcionen siempre
-      document.getElementById('syncRepoBtn').onclick = () => fetchRepoCSV(true);
+      // 1. Enlazar botones y formularios
+      document.getElementById('syncRepoBtn').onclick = () => {
+        if (confirm('¿Quieres descartar los cambios locales no exportados y recargar únicamente lo que hay en datos.csv?')) {
+          fetchRepoCSV(true);
+        }
+      };
       document.getElementById('downloadCsvBtn').onclick = downloadCSVFile;
       document.getElementById('uploadCsvBtn').onclick = () => document.getElementById('csvFileInput').click();
       document.getElementById('csvFileInput').onchange = (e) => {
@@ -709,6 +713,7 @@
         };
         records = [...records.filter(r => r.date !== selectedDate), updated];
         saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        document.getElementById('sourceSubtitle').textContent = `Guardado en navegador (${records.length} sesiones) · Recuerda descargar CSV para respaldo`;
         if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
         showToast(`Pre-Entreno del ${formatShortDate(selectedDate)} guardado.`);
       };
@@ -730,6 +735,7 @@
         };
         records = [...records.filter(r => r.date !== selectedDate), updated];
         saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
+        document.getElementById('sourceSubtitle').textContent = `Guardado en navegador (${records.length} sesiones) · Recuerda descargar CSV para respaldo`;
         if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
         showToast(`Post-Entreno del ${formatShortDate(selectedDate)} guardado.`);
       };
@@ -751,31 +757,46 @@
         showToast('Datos borrados.');
       };
 
-      // 2. Renderizar controles iniciales de inmediato
-      syncFormsWithSelectedDate();
+      // 2. FUSIÓN INTELIGENTE AL ARRANCAR:
+      // Primero leemos lo que ya tengas guardado en localStorage para NO perder tus ediciones
+      let localRecords = [];
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (Array.isArray(saved)) localRecords = saved;
+      } catch (e) {}
 
-      // 3. Intentar cargar datos.csv del repositorio; si no existe, usar localStorage o ejemplo
-      const loadedFromRepo = await fetchRepoCSV(false);
-      if (!loadedFromRepo) {
-        let loadedLocal = false;
-        try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-          if (Array.isArray(saved) && saved.length > 0) {
-            records = saved;
-            selectedDate = records[records.length - 1].date;
-            document.getElementById('sourceSubtitle').textContent = `Fuente activa: Memoria local (${records.length} sesiones)`;
-            loadedLocal = true;
+      // Luego intentamos leer datos.csv del repositorio para traer sesiones base o nuevas del otro dispositivo
+      let repoRecords = [];
+      try {
+        const res = await fetch(`${DEFAULT_CSV_FILE}?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          if (!text.trim().startsWith('<!DOCTYPE') && !text.trim().startsWith('<html')) {
+            // Reutilizamos parseUploadedCSV temporalmente para extraer las filas de datos.csv
+            if (parseUploadedCSV(text, DEFAULT_CSV_FILE)) {
+              repoRecords = [...records];
+            }
           }
-        } catch (e) {}
-
-        if (!loadedLocal) {
-          records = generate30DaysSampleData();
-          document.getElementById('sourceSubtitle').textContent = 'Sin datos.csv en carpeta · Mostrando ejemplo (pulsa "Cargar CSV")';
         }
-        saveToLocalStorage();
-        syncFormsWithSelectedDate();
-        updateAllCharts();
+      } catch (e) {}
+
+      // Combinamos ambos: partimos de datos.csv y encima aplicamos tus registros guardados en este navegador
+      const mergedMap = new Map();
+      repoRecords.forEach(r => mergedMap.set(r.date, r));
+      localRecords.forEach(r => mergedMap.set(r.date, r));
+
+      if (mergedMap.size > 0) {
+        records = Array.from(mergedMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+        selectedDate = records[records.length - 1].date;
+        document.getElementById('sourceSubtitle').textContent = `Datos sincronizados (${records.length} sesiones · Memoria local + ${DEFAULT_CSV_FILE})`;
+      } else {
+        records = generate30DaysSampleData();
+        document.getElementById('sourceSubtitle').textContent = 'Mostrando ejemplo (pulsa "Cargar CSV")';
       }
+
+      saveToLocalStorage();
+      syncFormsWithSelectedDate();
+      updateAllCharts();
     });
   </script>
 </body>
