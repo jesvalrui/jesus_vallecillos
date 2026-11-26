@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rendimiento Evolutivo · Seguimiento Diario de Entrenamientos</title>
+  <title>Rendimiento Evolutivo · Seguimiento Cloud (Google Sheets)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,23 +23,24 @@
   <!-- Notificación flotante (Toast) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 hidden max-w-md toast-enter">
     <div id="toastBox" class="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium bg-slate-900 text-white border-slate-700">
-      <span id="toastMessage">Datos guardados correctamente</span>
+      <span id="toastMessage">Datos sincronizados</span>
     </div>
   </div>
 
-  <!-- Modal de Confirmación para Borrar Todo -->
-  <div id="resetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
-      <h3 class="text-lg font-bold text-slate-900">¿Borrar todos los registros guardados?</h3>
-      <p class="text-sm text-slate-600">
-        Esta acción vaciará los datos de la memoria local del navegador. Podrás recuperar los del repositorio pulsando «Sincronizar datos.csv».
+  <!-- Modal Configuración URL Google Apps Script -->
+  <div id="configModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">Conectar con Google Sheets</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Pega aquí la URL de tu aplicación web de <strong>Google Apps Script</strong> (terminada en <code>/exec</code>). Si la dejas fija en el código del HTML (<code>GOOGLE_SCRIPT_URL</code>), cualquier dispositivo la usará automáticamente sin configurarla.
       </p>
-      <div class="flex flex-col sm:flex-row gap-2 pt-2">
-        <button id="confirmClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold cursor-pointer">
-          Sí, borrar todo
+      <input id="scriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none" />
+      <div class="flex gap-2 pt-2">
+        <button id="saveScriptUrlBtn" type="button" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold cursor-pointer">
+          Guardar y Sincronizar
         </button>
-        <button id="cancelClearBtn" type="button" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold cursor-pointer">
-          Cancelar
+        <button id="closeConfigBtn" type="button" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold cursor-pointer">
+          Cerrar
         </button>
       </div>
     </div>
@@ -49,7 +50,7 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shrink-0">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
@@ -57,44 +58,35 @@
         <div>
           <div class="flex flex-wrap items-center gap-2">
             <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
-              Rendimiento Evolutivo · Seguimiento Diario
+              Rendimiento Evolutivo · Cloud
             </h1>
-            <span id="daysCounterBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-              0 días en CSV
+            <span id="daysCounterBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              0 registros
             </span>
           </div>
           <p id="sourceSubtitle" class="text-xs text-slate-500">
-            Iniciando aplicación...
+            Conectando con Google Sheets...
           </p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <label class="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer select-none">
-          <input id="autoDownloadCheck" type="checkbox" class="rounded text-blue-600 cursor-pointer" />
-          <span>Auto-descargar CSV al guardar</span>
-        </label>
-
         <input id="csvFileInput" type="file" accept=".csv,text/csv" class="hidden" />
 
-        <button id="syncRepoBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold cursor-pointer">
-          Sincronizar datos.csv
+        <button id="configCloudBtn" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-semibold cursor-pointer">
+          URL Google Sheet
         </button>
 
-        <button id="uploadCsvBtn" type="button" class="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold cursor-pointer">
-          Cargar CSV
+        <button id="syncCloudBtn" type="button" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold cursor-pointer">
+          Actualizar desde nube
         </button>
 
-        <button id="downloadCsvBtn" type="button" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer">
+        <button id="uploadCsvBtn" type="button" class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold cursor-pointer">
+          Importar CSV
+        </button>
+
+        <button id="downloadCsvBtn" type="button" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer">
           Descargar CSV
-        </button>
-
-        <button id="loadDemoBtn" type="button" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold cursor-pointer">
-          Ejemplo (30d)
-        </button>
-
-        <button id="clearAllBtn" type="button" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold cursor-pointer">
-          Borrar todo
         </button>
       </div>
     </div>
@@ -148,8 +140,8 @@
           <div id="preMetricsContainer" class="p-5 space-y-4"></div>
         </div>
         <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
-          <span class="text-xs text-slate-500">Guarda las métricas matutinas</span>
-          <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm cursor-pointer">
+          <span class="text-xs text-slate-500">Sincroniza directo en Google Sheets</span>
+          <button id="savePreBtn" type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm cursor-pointer">
             Guardar Pre-Entreno
           </button>
         </div>
@@ -182,7 +174,7 @@
         </div>
         <div class="px-5 py-4 bg-amber-50/60 border-t border-[#e5d09c] flex items-center justify-between gap-4">
           <span class="text-xs text-amber-950">Conserva los datos pre-entreno</span>
-          <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm cursor-pointer">
+          <button id="savePostBtn" type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm cursor-pointer">
             Guardar Post-Entreno
           </button>
         </div>
@@ -246,8 +238,11 @@
   </main>
 
   <script>
-    const DEFAULT_CSV_FILE = 'datos.csv';
-    const STORAGE_KEY = 'rendimiento_evolutivo_standalone_v3';
+    // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT (terminada en /exec):
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvkUhfLaq8qvODaVLJMSe2n9cfagkAdjN6wUawKXfn1F-sy8Nfmo82QdZb8vcZjLvD/exec';
+
+    const URL_STORAGE_KEY = 'preparado_google_script_url';
+    const CACHE_STORAGE_KEY = 'preparado_records_cache_v1';
 
     const PRE_METRICS = [
       { id: 'disposicion', label: 'Disposición para entrenar', hint: '1: Nula motivación · 5: Motivación máxima' },
@@ -263,6 +258,11 @@
       { id: 'rpeMaximo', label: 'RPE MÁXIMO', subtitle: '(1 a 10)', activeClass: 'bg-rose-600 text-white border-rose-700', badgeClass: 'bg-rose-100 text-rose-900' }
     ];
 
+    function getActiveScriptUrl() {
+      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) return GOOGLE_SCRIPT_URL.trim();
+      return (localStorage.getItem(URL_STORAGE_KEY) || '').trim();
+    }
+
     function getLocalTodayStr() {
       const now = new Date();
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -273,23 +273,6 @@
     let preFormState = { disposicion: 4, animo: 4, energia: 4, dolor: 4, estres: 4 };
     let postFormState = { rpeSesion: 7, rpeIntervalos: 8, rpeMaximo: 8, sensaciones: 4, notas: '' };
     const chartInstances = {};
-
-    function generate30DaysSampleData() {
-      const baseToday = new Date();
-      const rows = [];
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(baseToday);
-        d.setDate(d.getDate() - i);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        rows.push({
-          date: dateStr, sesion: i % 2 === 0 ? 'Rodaje suave Z2' : 'Series / Fuerza',
-          disposicion: 4, animo: 4, energia: 4, dolor: 3, estres: 4,
-          rpeSesion: i % 2 === 0 ? 5 : 8, rpeIntervalos: i % 2 === 0 ? null : 8, rpeMaximo: i % 2 === 0 ? 6 : 9,
-          sensaciones: 4, notas: 'Datos de ejemplo'
-        });
-      }
-      return rows;
-    }
 
     function renderPreFormButtons() {
       const container = document.getElementById('preMetricsContainer');
@@ -353,10 +336,10 @@
       }
     }
 
-    function saveToLocalStorage() {
+    function saveCache() {
       records.sort((a, b) => a.date.localeCompare(b.date));
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch (e) {}
-      document.getElementById('daysCounterBadge').textContent = `${records.length} días en CSV`;
+      try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(records)); } catch (e) {}
+      document.getElementById('daysCounterBadge').textContent = `${records.length} registros`;
     }
 
     function formatShortDate(isoDate) {
@@ -414,6 +397,100 @@
       window._toastTimer = setTimeout(() => container.classList.add('hidden'), 3800);
     }
 
+    const numOrNull = (val) => {
+      if (val === undefined || val === null || val === '') return null;
+      const p = Number(String(val).replace(',', '.'));
+      return Number.isNaN(p) ? null : p;
+    };
+
+    // Lectura desde Google Sheets
+    async function loadFromGoogleSheets(notify = false) {
+      const scriptUrl = getActiveScriptUrl();
+      if (!scriptUrl) {
+        document.getElementById('sourceSubtitle').textContent = 'Falta configurar la URL de Google Apps Script (pulsa "URL Google Sheet")';
+        return false;
+      }
+
+      document.getElementById('sourceSubtitle').textContent = 'Sincronizando con Google Sheets...';
+      try {
+        const res = await fetch(`${scriptUrl}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = await res.json();
+
+        records = rows
+          .filter(r => r.FECHA && /^\d{4}-\d{2}-\d{2}/.test(String(r.FECHA)))
+          .map(r => ({
+            date: String(r.FECHA).slice(0, 10),
+            sesion: r.SESION || '',
+            disposicion: numOrNull(r.DISPOSICION),
+            animo: numOrNull(r.ANIMO),
+            energia: numOrNull(r.ENERGIA),
+            dolor: numOrNull(r.DOLOR_MUSCULAR),
+            estres: numOrNull(r.ESTRES),
+            rpeSesion: numOrNull(r.RPE_SESION),
+            rpeIntervalos: numOrNull(r.RPE_INTERVALOS),
+            rpeMaximo: numOrNull(r.RPE_MAXIMO),
+            sensaciones: numOrNull(r.SENSACIONES),
+            notas: r.NOTAS || ''
+          }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        if (records.length > 0 && !records.some(r => r.date === selectedDate)) {
+          selectedDate = records[records.length - 1].date;
+        }
+        saveCache();
+        syncFormsWithSelectedDate();
+        updateAllCharts();
+        document.getElementById('sourceSubtitle').textContent = `Conectado a Google Sheets · ${records.length} sesiones sincronizadas`;
+        if (notify) showToast(`Nube actualizada (${records.length} sesiones).`);
+        return true;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('sourceSubtitle').textContent = 'Error de conexión con Google Sheets (usando caché local)';
+        if (notify) showToast('No se pudo conectar con Google Sheets. Revisa la URL o permisos.', true);
+        return false;
+      }
+    }
+
+    // Escritura hacia Google Sheets
+    async function saveRecordToGoogleSheets(recordObj) {
+      const scriptUrl = getActiveScriptUrl();
+      if (!scriptUrl) {
+        showToast('Configura primero la URL de Google Apps Script para guardar en la nube.', true);
+        return false;
+      }
+
+      const payload = {
+        FECHA: recordObj.date,
+        SESION: recordObj.sesion || '',
+        DISPOSICION: recordObj.disposicion ?? '',
+        ANIMO: recordObj.animo ?? '',
+        ENERGIA: recordObj.energia ?? '',
+        DOLOR_MUSCULAR: recordObj.dolor ?? '',
+        ESTRES: recordObj.estres ?? '',
+        RPE_SESION: recordObj.rpeSesion ?? '',
+        RPE_INTERVALOS: recordObj.rpeIntervalos ?? '',
+        RPE_MAXIMO: recordObj.rpeMaximo ?? '',
+        SENSACIONES: recordObj.sensaciones ?? '',
+        NOTAS: recordObj.notas || ''
+      };
+
+      try {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        document.getElementById('sourceSubtitle').textContent = `Guardado en Google Sheets (${formatShortDate(recordObj.date)})`;
+        return true;
+      } catch (err) {
+        console.error(err);
+        showToast('Error al enviar los datos a Google Sheets.', true);
+        return false;
+      }
+    }
+
     function downloadCSVFile() {
       if (records.length === 0) { showToast('No hay registros para exportar.', true); return; }
       const headers = ['FECHA','SESION','DISPOSICION','ANIMO','ENERGIA','DOLOR_MUSCULAR','ESTRES','RPE_SESION','RPE_INTERVALOS','RPE_MAXIMO','SENSACIONES','NOTAS'];
@@ -430,121 +507,59 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = DEFAULT_CSV_FILE;
+      a.download = `entrenamientos_${getLocalTodayStr()}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
-    function parseUploadedCSV(text, sourceLabel = 'CSV cargado') {
-      try {
-        const cleanText = text.replace(/^\uFEFF/, '').trim();
-        if (!cleanText) return false;
-        const firstLine = cleanText.split(/\r?\n/)[0] || '';
-        const commaCount = (firstLine.match(/,/g) || []).length;
-        const semiCount = (firstLine.match(/;/g) || []).length;
-        const delimiter = semiCount > commaCount ? ';' : ',';
+    function parseAndImportCSV(text) {
+      const cleanText = text.replace(/^\uFEFF/, '').trim();
+      const firstLine = cleanText.split(/\r?\n/)[0] || '';
+      const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
+      const rows = [];
+      let currentRow = [], currentVal = '', inQuotes = false;
 
-        const rows = [];
-        let currentRow = [];
-        let currentVal = '';
-        let inQuotes = false;
-
-        for (let i = 0; i < cleanText.length; i++) {
-          const ch = cleanText[i];
-          const nextCh = cleanText[i + 1];
-          if (ch === '"') {
-            if (inQuotes && nextCh === '"') { currentVal += '"'; i++; }
-            else { inQuotes = !inQuotes; }
-          } else if (ch === delimiter && !inQuotes) {
-            currentRow.push(currentVal.trim());
-            currentVal = '';
-          } else if ((ch === '\n' || (ch === '\r' && nextCh === '\n')) && !inQuotes) {
-            if (ch === '\r') i++;
-            currentRow.push(currentVal.trim());
-            if (currentRow.some(c => c !== '')) rows.push(currentRow);
-            currentRow = [];
-            currentVal = '';
-          } else {
-            currentVal += ch;
-          }
-        }
-        if (currentVal !== '' || currentRow.length > 0) {
+      for (let i = 0; i < cleanText.length; i++) {
+        const ch = cleanText[i], nextCh = cleanText[i + 1];
+        if (ch === '"') {
+          if (inQuotes && nextCh === '"') { currentVal += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === delimiter && !inQuotes) {
+          currentRow.push(currentVal.trim()); currentVal = '';
+        } else if ((ch === '\n' || (ch === '\r' && nextCh === '\n')) && !inQuotes) {
+          if (ch === '\r') i++;
           currentRow.push(currentVal.trim());
           if (currentRow.some(c => c !== '')) rows.push(currentRow);
+          currentRow = []; currentVal = '';
+        } else {
+          currentVal += ch;
         }
+      }
+      if (currentVal !== '' || currentRow.length > 0) {
+        currentRow.push(currentVal.trim());
+        if (currentRow.some(c => c !== '')) rows.push(currentRow);
+      }
 
-        if (rows.length < 2) {
-          showToast('El CSV no tiene suficientes filas.', true);
-          return false;
-        }
-
-        const numOrNull = (val) => {
-          if (val === undefined || val === null || val === '') return null;
-          const p = Number(String(val).replace(',', '.'));
-          return Number.isNaN(p) ? null : p;
-        };
-
-        const imported = [];
-        for (let i = 1; i < rows.length; i++) {
-          const cols = rows[i];
-          if (!cols[0]) continue;
-          let dateStr = cols[0].trim();
-          if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(dateStr)) {
-            const [dd, mm, yyyy] = dateStr.split('/');
-            dateStr = `${yyyy.length === 2 ? '20' + yyyy : yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-          }
-          if (!/^\d{4}-\d{2}-\d{2}/.test(dateStr)) continue;
-          imported.push({
-            date: dateStr.slice(0, 10),
-            sesion: cols[1] || 'Entrenamiento',
-            disposicion: numOrNull(cols[2]),
-            animo: numOrNull(cols[3]),
-            energia: numOrNull(cols[4]),
-            dolor: numOrNull(cols[5]),
-            estres: numOrNull(cols[6]),
-            rpeSesion: numOrNull(cols[7]),
-            rpeIntervalos: numOrNull(cols[8]),
-            rpeMaximo: numOrNull(cols[9]),
-            sensaciones: numOrNull(cols[10]),
-            notas: cols[11] || ''
-          });
-        }
-
-        if (imported.length === 0) {
-          showToast('No se encontraron fechas válidas (AAAA-MM-DD) en el CSV.', true);
-          return false;
-        }
-
+      const imported = [];
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i];
+        if (!cols[0] || !/^\d{4}-\d{2}-\d{2}/.test(cols[0].trim())) continue;
+        imported.push({
+          date: cols[0].trim().slice(0, 10),
+          sesion: cols[1] || '',
+          disposicion: numOrNull(cols[2]), animo: numOrNull(cols[3]), energia: numOrNull(cols[4]),
+          dolor: numOrNull(cols[5]), estres: numOrNull(cols[6]), rpeSesion: numOrNull(cols[7]),
+          rpeIntervalos: numOrNull(cols[8]), rpeMaximo: numOrNull(cols[9]), sensaciones: numOrNull(cols[10]),
+          notas: cols[11] || ''
+        });
+      }
+      if (imported.length > 0) {
         records = imported.sort((a, b) => a.date.localeCompare(b.date));
         selectedDate = records[records.length - 1].date;
-        saveToLocalStorage();
-        syncFormsWithSelectedDate();
-        updateAllCharts();
-        document.getElementById('sourceSubtitle').textContent = `Fuente activa: ${sourceLabel} (${records.length} sesiones)`;
-        return true;
-      } catch (err) {
-        console.error(err);
-        showToast('Error al leer el formato del CSV.', true);
-        return false;
-      }
-    }
-
-    async function fetchRepoCSV(notifyUser = false) {
-      try {
-        const res = await fetch(`${DEFAULT_CSV_FILE}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-          throw new Error('Respuesta HTML en lugar de CSV');
-        }
-        const ok = parseUploadedCSV(text, DEFAULT_CSV_FILE);
-        if (ok && notifyUser) showToast(`Sincronizado con ${DEFAULT_CSV_FILE} (${records.length} sesiones).`);
-        return ok;
-      } catch (err) {
-        if (notifyUser) showToast(`No se encontró "${DEFAULT_CSV_FILE}" junto al HTML. Usa "Cargar CSV".`, true);
-        return false;
+        saveCache(); syncFormsWithSelectedDate(); updateAllCharts();
+        showToast(`CSV importado en vista local (${records.length} sesiones).`);
       }
     }
 
@@ -664,23 +679,32 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Enlazar botones y formularios
-      document.getElementById('syncRepoBtn').onclick = () => {
-        if (confirm('¿Quieres descartar los cambios locales no exportados y recargar únicamente lo que hay en datos.csv?')) {
-          fetchRepoCSV(true);
+      // Modal de configuración de URL
+      const configModal = document.getElementById('configModal');
+      document.getElementById('configCloudBtn').onclick = () => {
+        document.getElementById('scriptUrlInput').value = getActiveScriptUrl();
+        configModal.classList.remove('hidden'); configModal.classList.add('flex');
+      };
+      document.getElementById('closeConfigBtn').onclick = () => {
+        configModal.classList.add('hidden'); configModal.classList.remove('flex');
+      };
+      document.getElementById('saveScriptUrlBtn').onclick = async () => {
+        const val = document.getElementById('scriptUrlInput').value.trim();
+        if (val) {
+          localStorage.setItem(URL_STORAGE_KEY, val);
+          configModal.classList.add('hidden'); configModal.classList.remove('flex');
+          await loadFromGoogleSheets(true);
         }
       };
+
+      document.getElementById('syncCloudBtn').onclick = () => loadFromGoogleSheets(true);
       document.getElementById('downloadCsvBtn').onclick = downloadCSVFile;
       document.getElementById('uploadCsvBtn').onclick = () => document.getElementById('csvFileInput').click();
       document.getElementById('csvFileInput').onchange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (parseUploadedCSV(ev.target.result, file.name)) {
-            showToast(`CSV "${file.name}" cargado (${records.length} días).`);
-          }
-        };
+        reader.onload = (ev) => parseAndImportCSV(ev.target.result);
         reader.readAsText(file, 'UTF-8');
         e.target.value = '';
       };
@@ -700,103 +724,57 @@
         selectedDate = getLocalTodayStr(); syncFormsWithSelectedDate();
       };
 
-      document.getElementById('preWorkoutForm').onsubmit = (e) => {
+      document.getElementById('preWorkoutForm').onsubmit = async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('savePreBtn');
+        btn.disabled = true; btn.textContent = 'Guardando...';
         const existing = records.find(r => r.date === selectedDate) || {};
         const updated = {
           date: selectedDate,
-          sesion: document.getElementById('sessionNameInput').value.trim() || 'Entrenamiento',
+          sesion: document.getElementById('sessionNameInput').value.trim() || existing.sesion || 'Entrenamiento',
           disposicion: Number(preFormState.disposicion), animo: Number(preFormState.animo),
           energia: Number(preFormState.energia), dolor: Number(preFormState.dolor), estres: Number(preFormState.estres),
           rpeSesion: existing.rpeSesion ?? null, rpeIntervalos: existing.rpeIntervalos ?? null,
           rpeMaximo: existing.rpeMaximo ?? null, sensaciones: existing.sensaciones ?? null, notas: existing.notas ?? ''
         };
         records = [...records.filter(r => r.date !== selectedDate), updated];
-        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
-        document.getElementById('sourceSubtitle').textContent = `Guardado en navegador (${records.length} sesiones) · Recuerda descargar CSV para respaldo`;
-        if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
-        showToast(`Pre-Entreno del ${formatShortDate(selectedDate)} guardado.`);
+        saveCache(); syncFormsWithSelectedDate(); updateAllCharts();
+        const ok = await saveRecordToGoogleSheets(updated);
+        btn.disabled = false; btn.textContent = 'Guardar Pre-Entreno';
+        if (ok) showToast(`Pre-Entreno del ${formatShortDate(selectedDate)} guardado en Google Sheets.`);
       };
 
-      document.getElementById('postWorkoutForm').onsubmit = (e) => {
+      document.getElementById('postWorkoutForm').onsubmit = async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('savePostBtn');
+        btn.disabled = true; btn.textContent = 'Guardando...';
         const existing = records.find(r => r.date === selectedDate) || {};
         const updated = {
           date: selectedDate,
           sesion: document.getElementById('sessionNameInput').value.trim() || existing.sesion || 'Entrenamiento',
-          disposicion: existing.disposicion ?? Number(preFormState.disposicion),
-          animo: existing.animo ?? Number(preFormState.animo),
-          energia: existing.energia ?? Number(preFormState.energia),
-          dolor: existing.dolor ?? Number(preFormState.dolor),
-          estres: existing.estres ?? Number(preFormState.estres),
+          disposicion: existing.disposicion ?? null, animo: existing.animo ?? null,
+          energia: existing.energia ?? null, dolor: existing.dolor ?? null, estres: existing.estres ?? null,
           rpeSesion: Number(postFormState.rpeSesion), rpeIntervalos: Number(postFormState.rpeIntervalos),
           rpeMaximo: Number(postFormState.rpeMaximo), sensaciones: Number(postFormState.sensaciones),
           notas: document.getElementById('postNotesInput').value.trim()
         };
         records = [...records.filter(r => r.date !== selectedDate), updated];
-        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
-        document.getElementById('sourceSubtitle').textContent = `Guardado en navegador (${records.length} sesiones) · Recuerda descargar CSV para respaldo`;
-        if (document.getElementById('autoDownloadCheck').checked) downloadCSVFile();
-        showToast(`Post-Entreno del ${formatShortDate(selectedDate)} guardado.`);
+        saveCache(); syncFormsWithSelectedDate(); updateAllCharts();
+        const ok = await saveRecordToGoogleSheets(updated);
+        btn.disabled = false; btn.textContent = 'Guardar Post-Entreno';
+        if (ok) showToast(`Post-Entreno del ${formatShortDate(selectedDate)} guardado en Google Sheets.`);
       };
 
-      document.getElementById('loadDemoBtn').onclick = () => {
-        records = generate30DaysSampleData(); selectedDate = getLocalTodayStr();
-        saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
-        document.getElementById('sourceSubtitle').textContent = 'Fuente activa: Datos de ejemplo (30 días)';
-        showToast('Cargados 30 días de ejemplo.');
-      };
-
-      const resetModal = document.getElementById('resetModal');
-      document.getElementById('clearAllBtn').onclick = () => { resetModal.classList.remove('hidden'); resetModal.classList.add('flex'); };
-      document.getElementById('cancelClearBtn').onclick = () => { resetModal.classList.add('hidden'); resetModal.classList.remove('flex'); };
-      document.getElementById('confirmClearBtn').onclick = () => {
-        records = []; saveToLocalStorage(); syncFormsWithSelectedDate(); updateAllCharts();
-        resetModal.classList.add('hidden'); resetModal.classList.remove('flex');
-        document.getElementById('sourceSubtitle').textContent = 'Sin datos cargados';
-        showToast('Datos borrados.');
-      };
-
-      // 2. FUSIÓN INTELIGENTE AL ARRANCAR:
-      // Primero leemos lo que ya tengas guardado en localStorage para NO perder tus ediciones
-      let localRecords = [];
+      // Cargar caché inicial rápido y luego sincronizar desde Google Sheets
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        if (Array.isArray(saved)) localRecords = saved;
+        const cached = JSON.parse(localStorage.getItem(CACHE_STORAGE_KEY) || '[]');
+        if (Array.isArray(cached) && cached.length > 0) records = cached;
       } catch (e) {}
-
-      // Luego intentamos leer datos.csv del repositorio para traer sesiones base o nuevas del otro dispositivo
-      let repoRecords = [];
-      try {
-        const res = await fetch(`${DEFAULT_CSV_FILE}?t=${Date.now()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const text = await res.text();
-          if (!text.trim().startsWith('<!DOCTYPE') && !text.trim().startsWith('<html')) {
-            // Reutilizamos parseUploadedCSV temporalmente para extraer las filas de datos.csv
-            if (parseUploadedCSV(text, DEFAULT_CSV_FILE)) {
-              repoRecords = [...records];
-            }
-          }
-        }
-      } catch (e) {}
-
-      // Combinamos ambos: partimos de datos.csv y encima aplicamos tus registros guardados en este navegador
-      const mergedMap = new Map();
-      repoRecords.forEach(r => mergedMap.set(r.date, r));
-      localRecords.forEach(r => mergedMap.set(r.date, r));
-
-      if (mergedMap.size > 0) {
-        records = Array.from(mergedMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-        selectedDate = records[records.length - 1].date;
-        document.getElementById('sourceSubtitle').textContent = `Datos sincronizados (${records.length} sesiones · Memoria local + ${DEFAULT_CSV_FILE})`;
-      } else {
-        records = generate30DaysSampleData();
-        document.getElementById('sourceSubtitle').textContent = 'Mostrando ejemplo (pulsa "Cargar CSV")';
-      }
-
-      saveToLocalStorage();
+      saveCache();
       syncFormsWithSelectedDate();
       updateAllCharts();
+
+      await loadFromGoogleSheets(false);
     });
   </script>
 </body>
